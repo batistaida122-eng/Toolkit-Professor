@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toolkit Professor</title>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getDatabase, ref, push, onValue, update, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBplwJVmwVRRNbY-RZxQDnbxL3lRI6ZIQg",
+    authDomain: "brilh-fe5a2.firebaseapp.com",
+    databaseURL: "https://brilh-fe5a2-default-rtdb.firebaseio.com",
+    projectId: "brilh-fe5a2",
+    storageBucket: "brilh-fe5a2.firebasestorage.app",
+    messagingSenderId: "436475426123",
+    appId: "1:436475426123:web:697c673cd298cd4c99a4ce",
+    measurementId: "G-NNLQL24216"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  window.__fb = { db, ref, push, onValue, update, serverTimestamp };
+</script>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --accent:#3ddc97; --accent2:#ff6b6b;
+    --text:#eef1f5; --muted:#9aa3b2; --border:#262a33;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); padding-bottom:80px;
+  }
+  header{
+    padding:18px 16px 10px; position:sticky; top:0; background:var(--bg);
+    z-index:10; border-bottom:1px solid var(--border);
+  }
+  h1{font-size:18px; margin:0 0 4px;}
+  .sub{color:var(--muted); font-size:13px;}
+  main{padding:16px; max-width:680px; margin:0 auto;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-bottom:14px;
+  }
+  .card h2{font-size:15px; margin:0 0 12px; color:var(--accent);}
+  input, textarea{
+    width:100%; background:#11141a; border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:10px 12px; font-size:14px; margin-bottom:8px;
+  }
+  textarea{min-height:80px; resize:vertical;}
+  button{
+    border:none; border-radius:10px; padding:11px 16px; font-size:14px; font-weight:600;
+    cursor:pointer; color:#0f1115;
+  }
+  .btn-main{background:var(--accent); width:100%;}
+  .btn-secondary{background:#2a2f3a; color:var(--text);}
+  .btn-danger{background:var(--accent2); color:#fff;}
+  .row{display:flex; gap:8px;}
+  .row > *{flex:1;}
+  ul{list-style:none; padding:0; margin:0;}
+  li{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;
+  }
+  li:last-child{border-bottom:none;}
+  .pts{color:var(--accent); font-weight:700; font-size:13px;}
+  .sorteado{
+    text-align:center; padding:24px 12px; font-size:26px; font-weight:800;
+    background:#11141a; border-radius:12px; margin-bottom:12px; min-height:70px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  nav{
+    position:fixed; bottom:0; left:0; right:0; display:flex;
+    background:var(--card); border-top:1px solid var(--border); z-index:20;
+  }
+  nav button{
+    flex:1; background:none; color:var(--muted); border-radius:0; padding:12px 4px;
+    font-size:11px; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  nav button.active{color:var(--accent);}
+  nav button .emoji{font-size:20px;}
+  .tab{display:none;}
+  .tab.active{display:block;}
+  .duvida{
+    background:#11141a; border-radius:10px; padding:12px; margin-bottom:8px; font-size:14px;
+  }
+  .duvida .meta{color:var(--muted); font-size:11px; margin-top:6px;}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:20px 0;}
+  .badge{
+    font-size:11px; padding:3px 8px; border-radius:20px; background:#262a33; color:var(--muted);
+  }
+  .filtro-resultado{
+    text-align:center; font-size:30px; font-weight:800; padding:30px 0;
+  }
+  .frase{text-align:center; color:var(--muted); font-size:14px; min-height:20px; margin-top:8px;}
+  .link-box{
+    background:#11141a; border-radius:10px; padding:10px; font-size:12px;
+    word-break:break-all; color:var(--accent); margin-bottom:8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 Toolkit Professor</h1>
+  <div class="sub" id="subtitulo">Sorteio, dúvidas anônimas e dinâmica de turma</div>
+</header>
+
+<main>
+
+  <!-- ===================== TELA DO ALUNO (via ?aluno=1) ===================== -->
+  <div id="viewAluno" class="tab">
+    <div class="card">
+      <h2>📨 Mande sua dúvida</h2>
+      <textarea id="txtDuvidaAluno" placeholder="Escreva sua dúvida sobre a aula ou a prova..."></textarea>
+      <button class="btn-main" onclick="enviarDuvida()">Enviar (anônimo)</button>
+      <div class="frase" id="confirmacaoAluno"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TELA DA PROFESSORA ===================== -->
+  <div id="viewProfessora">
+
+    <!-- ABA 1: GESTÃO -->
+    <div class="tab active" id="tabGestao">
+      <div class="card">
+        <h2>🎯 Sortear Aluno</h2>
+        <div class="sorteado" id="nomeSorteado">Toque em sortear</div>
+        <button class="btn-main" onclick="sortear()">Sortear</button>
+        <div class="row" style="margin-top:10px; display:none;" id="botoesResultado">
+          <button class="btn-main" onclick="marcarResultado(true)">✔ Acertou</button>
+          <button class="btn-danger" onclick="marcarResultado(false)">✘ Errou</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>👥 Turma</h2>
+        <textarea id="txtNomes" placeholder="Cole os nomes da turma, um por linha"></textarea>
+        <button class="btn-secondary" onclick="adicionarTurma()">Salvar turma</button>
+      </div>
+
+      <div class="card">
+        <h2>📊 Desempenho</h2>
+        <ul id="listaDesempenho"><li class="empty">Nenhum aluno cadastrado ainda</li></ul>
+      </div>
+    </div>
+
+    <!-- ABA 2: DÚVIDAS -->
+    <div class="tab" id="tabDuvidas">
+      <div class="card">
+        <h2>🔗 Link para os alunos</h2>
+        <div class="link-box" id="linkAluno">carregando...</div>
+        <button class="btn-secondary" onclick="copiarLink()">Copiar link</button>
+      </div>
+      <div class="card">
+        <h2>💬 Dúvidas recebidas</h2>
+        <div id="listaDuvidas"><div class="empty">Nenhuma dúvida ainda</div></div>
+      </div>
+    </div>
+
+    <!-- ABA 3: ROLETA -->
+    <div class="tab" id="tabRoleta">
+      <div class="card">
+        <h2>🎲 Roleta do Humor</h2>
+        <div class="filtro-resultado" id="resultadoRoleta">🎲</div>
+        <button class="btn-main" onclick="girarRoleta()">Girar</button>
+        <div class="frase" id="fraseRoleta"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<nav id="navBar">
+  <button class="active" onclick="trocarAba('tabGestao', this)">
+    <span class="emoji">🎯</span>Sorteio
+  </button>
+  <button onclick="trocarAba('tabDuvidas', this)">
+    <span class="emoji">💬</span>Dúvidas
+  </button>
+  <button onclick="trocarAba('tabRoleta', this)">
+    <span class="emoji">🎲</span>Roleta
+  </button>
+</nav>
+
+<script>
+  // ---------- DETECÇÃO DE MODO (aluno vs professora) ----------
+  const params = new URLSearchParams(window.location.search);
+  const isAluno = params.get('aluno') === '1';
+
+  if (isAluno) {
+    document.getElementById('viewProfessora').style.display = 'none';
+    document.getElementById('navBar').style.display = 'none';
+    document.getElementById('viewAluno').classList.add('active');
+    document.getElementById('subtitulo').textContent = 'Envie sua dúvida sem se identificar';
+  } else {
+    document.getElementById('viewAluno').style.display = 'none';
+    const link = window.location.href.split('?')[0] + '?aluno=1';
+    document.getElementById('linkAluno').textContent = link;
+  }
+
+  // ---------- NAVEGAÇÃO ENTRE ABAS (professora) ----------
+  function trocarAba(id, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('#navBar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // ---------- TURMA E SORTEIO (localStorage) ----------
+  function carregarTurma() {
+    return JSON.parse(localStorage.getItem('turma') || '[]');
+  }
+  function salvarTurma(turma) {
+    localStorage.setItem('turma', JSON.stringify(turma));
+  }
+
+  function adicionarTurma() {
+    const texto = document.getElementById('txtNomes').value.trim();
+    if (!texto) return;
+    const nomesNovos = texto.split('\n').map(n => n.trim()).filter(Boolean);
+    let turma = carregarTurma();
+    const existentes = new Set(turma.map(a => a.nome.toLowerCase()));
+    nomesNovos.forEach(nome => {
+      if (!existentes.has(nome.toLowerCase())) {
+        turma.push({ nome, acertos: 0, erros: 0 });
+      }
+    });
+    salvarTurma(turma);
+    document.getElementById('txtNomes').value = '';
+    renderDesempenho();
+  }
+
+  let alunoSorteadoIdx = null;
+
+  function sortear() {
+    const turma = carregarTurma();
+    if (turma.length === 0) {
+      document.getElementById('nomeSorteado').textContent = 'Cadastre a turma primeiro';
+      return;
+    }
+    alunoSorteadoIdx = Math.floor(Math.random() * turma.length);
+    document.getElementById('nomeSorteado').textContent = turma[alunoSorteadoIdx].nome;
+    document.getElementById('botoesResultado').style.display = 'flex';
+  }
+
+  function marcarResultado(acertou) {
+    if (alunoSorteadoIdx === null) return;
+    let turma = carregarTurma();
+    if (acertou) turma[alunoSorteadoIdx].acertos++;
+    else turma[alunoSorteadoIdx].erros++;
+    salvarTurma(turma);
+    document.getElementById('botoesResultado').style.display = 'none';
+    document.getElementById('nomeSorteado').textContent = 'Toque em sortear';
+    alunoSorteadoIdx = null;
+    renderDesempenho();
+  }
+
+  function renderDesempenho() {
+    const turma = carregarTurma();
+    const ul = document.getElementById('listaDesempenho');
+    if (turma.length === 0) {
+      ul.innerHTML = '<li class="empty">Nenhum aluno cadastrado ainda</li>';
+      return;
+    }
+    ul.innerHTML = turma.map(a => {
+      const total = a.acertos + a.erros;
+      const pct = total ? Math.round((a.acertos / total) * 100) : 0;
+      return `<li><span>${a.nome}</span><span class="pts">${a.acertos}✔ / ${a.erros}✘ (${pct}%)</span></li>`;
+    }).join('');
+  }
+
+  renderDesempenho();
+
+  // ---------- DÚVIDAS ANÔNIMAS (Realtime Database) ----------
+  const { db, ref, push, onValue, update, serverTimestamp } = window.__fb;
+  const duvidasRef = ref(db, 'duvidas');
+
+  function enviarDuvida() {
+    const texto = document.getElementById('txtDuvidaAluno').value.trim();
+    if (!texto) return;
+    push(duvidasRef, { texto, criadoEm: serverTimestamp(), resolvida: false });
+    document.getElementById('txtDuvidaAluno').value = '';
+    document.getElementById('confirmacaoAluno').textContent = '✔ Dúvida enviada anonimamente!';
+    setTimeout(() => document.getElementById('confirmacaoAluno').textContent = '', 3000);
+  }
+
+  function copiarLink() {
+    navigator.clipboard.writeText(document.getElementById('linkAluno').textContent);
+  }
+
+  if (!isAluno) {
+    onValue(duvidasRef, (snapshot) => {
+      const div = document.getElementById('listaDuvidas');
+      const dados = snapshot.val();
+      if (!dados) {
+        div.innerHTML = '<div class="empty">Nenhuma dúvida ainda</div>';
+        return;
+      }
+      const itens = Object.entries(dados).sort((a, b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
+      div.innerHTML = '';
+      itens.forEach(([id, d]) => {
+        const hora = d.criadoEm ? new Date(d.criadoEm).toLocaleString('pt-BR') : '';
+        div.innerHTML += `
+          <div class="duvida">
+            <div>${d.texto}</div>
+            <div class="meta">
+              <span class="badge">${d.resolvida ? '✔ resolvida' : 'pendente'}</span> ${hora}
+              <button class="btn-secondary" style="margin-top:6px; padding:4px 8px; font-size:11px;"
+                onclick="resolverDuvida('${id}', ${!d.resolvida})">
+                ${d.resolvida ? 'Reabrir' : 'Marcar como respondida'}
+              </button>
+            </div>
+          </div>`;
+      });
+    });
+  }
+
+  function resolverDuvida(id, valor) {
+    update(ref(db, 'duvidas/' + id), { resolvida: valor });
+  }
+
+  // ---------- ROLETA DO HUMOR ----------
+  const categorias = [
+    { nome: 'CDF', frase: 'O gabarito da turma! Vamos ver se a fama é real.' },
+    { nome: 'Bagunceiro', frase: 'Hora de provar que aprendeu mesmo brincando!' },
+    { nome: 'Turista', frase: 'O aluno que só vem passear... essa é pra você!' },
+    { nome: 'Comportado', frase: 'Quietinho mas atento, vamos testar!' },
+    { nome: 'Preguiçoso', frase: 'Bora acordar esses neurônios!' },
+    { nome: 'Anjo da Sala', frase: 'O favorito da turma, sem pressão... ou com!' },
+  ];
+
+  function girarRoleta() {
+    const el = document.getElementById('resultadoRoleta');
+    const fraseEl = document.getElementById('fraseRoleta');
+    let voltas = 12;
+    let i = 0;
+    const interval = setInterval(() => {
+      el.textContent = categorias[i % categorias.length].nome;
+      i++;
+      voltas--;
+      if (voltas <= 0) {
+        clearInterval(interval);
+        const final = categorias[Math.floor(Math.random() * categorias.length)];
+        el.textContent = final.nome;
+        fraseEl.textContent = final.frase;
+      }
+    }, 90);
+  }
+
+  // expõe funções pro HTML inline (onclick) já que script é módulo
+  window.enviarDuvida = enviarDuvida;
+  window.copiarLink = copiarLink;
+  window.resolverDuvida = resolverDuvida;
+  window.sortear = sortear;
+  window.marcarResultado = marcarResultado;
+  window.adicionarTurma = adicionarTurma;
+  window.trocarAba = trocarAba;
+  window.girarRoleta = girarRoleta;
+</script>
+</body>
+</html>
