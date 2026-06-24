@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toolkit Professor</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --accent:#3ddc97; --accent2:#ff6b6b; --warn:#ffb84d;
+    --text:#eef1f5; --muted:#9aa3b2; --border:#262a33;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); padding-bottom:80px;
+  }
+  header{
+    padding:18px 16px 10px; position:sticky; top:0; background:var(--bg);
+    z-index:10; border-bottom:1px solid var(--border);
+  }
+  h1{font-size:18px; margin:0 0 4px;}
+  .sub{color:var(--muted); font-size:13px;}
+  main{padding:16px; max-width:680px; margin:0 auto;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-bottom:14px;
+  }
+  .card h2{font-size:15px; margin:0 0 12px; color:var(--accent);}
+  input, textarea, select{
+    width:100%; background:#11141a; border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:10px 12px; font-size:14px; margin-bottom:8px;
+  }
+  textarea{min-height:80px; resize:vertical;}
+  button{
+    border:none; border-radius:10px; padding:11px 16px; font-size:14px; font-weight:600;
+    cursor:pointer; color:#0f1115;
+  }
+  .btn-main{background:var(--accent); width:100%;}
+  .btn-secondary{background:#2a2f3a; color:var(--text);}
+  .btn-danger{background:var(--accent2); color:#fff;}
+  .btn-small{padding:5px 10px; font-size:12px; border-radius:8px;}
+  .row{display:flex; gap:8px;}
+  .row > *{flex:1;}
+  ul{list-style:none; padding:0; margin:0;}
+  li{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;
+  }
+  li:last-child{border-bottom:none;}
+  .pts{color:var(--accent); font-weight:700; font-size:12px; white-space:nowrap;}
+  .pill-faltoso{color:var(--accent2); font-weight:700; font-size:12px;}
+  .pill-100{color:var(--accent); font-weight:700; font-size:12px;}
+  .nome-aluno{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+  .sorteado{
+    text-align:center; padding:24px 12px; font-size:26px; font-weight:800;
+    background:#11141a; border-radius:12px; margin-bottom:12px; min-height:70px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  nav{
+    position:fixed; bottom:0; left:0; right:0; display:flex;
+    background:var(--card); border-top:1px solid var(--border); z-index:20;
+  }
+  nav button{
+    flex:1; background:none; color:var(--muted); border-radius:0; padding:12px 4px;
+    font-size:11px; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  nav button.active{color:var(--accent);}
+  nav button .emoji{font-size:18px;}
+  .tab{display:none;}
+  .tab.active{display:block;}
+  .duvida{
+    background:#11141a; border-radius:10px; padding:12px; margin-bottom:8px; font-size:14px;
+  }
+  .duvida .meta{color:var(--muted); font-size:11px; margin-top:6px;}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:20px 0;}
+  .badge{
+    font-size:11px; padding:3px 8px; border-radius:20px; background:#262a33; color:var(--muted);
+  }
+  .filtro-resultado{
+    text-align:center; font-size:30px; font-weight:800; padding:30px 0;
+  }
+  .frase{text-align:center; color:var(--muted); font-size:14px; min-height:20px; margin-top:8px;}
+  .link-box{
+    background:#11141a; border-radius:10px; padding:10px; font-size:12px;
+    word-break:break-all; color:var(--accent); margin-bottom:8px;
+  }
+  .turma-row{display:flex; gap:8px; align-items:center;}
+  .turma-row select{flex:2; margin-bottom:0;}
+  .turma-row button{flex:1; white-space:nowrap;}
+  #qrcodeBox{
+    display:flex; justify-content:center; padding:14px; background:#fff;
+    border-radius:10px; margin-bottom:10px;
+  }
+  .resumo-top{font-size:13px; color:var(--muted); margin-bottom:10px; line-height:1.5;}
+  .resumo-top b{color:var(--text);}
+  .checklist-item{
+    display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border);
+  }
+  .checklist-item:last-child{border-bottom:none;}
+  .checklist-item input{width:auto; margin:0;}
+  a.btn-whats{
+    display:block; text-align:center; text-decoration:none; background:#25D366; color:#fff;
+    border-radius:10px; padding:11px 16px; font-size:14px; font-weight:600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 Toolkit Professor</h1>
+  <div class="sub" id="subtitulo">Sorteio, dúvidas anônimas e dinâmica de turma</div>
+</header>
+
+<main>
+
+  <!-- ===================== TELA DO ALUNO (via ?aluno=1) ===================== -->
+  <div id="viewAluno" class="tab">
+    <div class="card">
+      <h2>📨 Mande sua dúvida</h2>
+      <textarea id="txtDuvidaAluno" placeholder="Escreva sua dúvida sobre a aula ou a prova..."></textarea>
+      <button class="btn-main" onclick="enviarDuvida()">Enviar (anônimo)</button>
+      <div class="frase" id="confirmacaoAluno"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TELA DA PROFESSORA ===================== -->
+  <div id="viewProfessora">
+
+    <!-- ABA 1: GESTÃO -->
+    <div class="tab active" id="tabGestao">
+
+      <div class="card">
+        <h2>🏫 Turma</h2>
+        <div class="turma-row">
+          <select id="selectTurma" onchange="trocarTurma(this.value)"></select>
+          <button class="btn-secondary btn-small" onclick="novaTurma()">+ Nova</button>
+          <button class="btn-danger btn-small" onclick="excluirTurma()">Excluir</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Sortear Aluno</h2>
+        <div class="sorteado" id="nomeSorteado">Toque em sortear</div>
+        <button class="btn-main" onclick="sortear()">Sortear</button>
+        <div class="row" style="margin-top:10px; display:none;" id="botoesResultado">
+          <button class="btn-main" onclick="marcarResultado(true)">✔ Acertou</button>
+          <button class="btn-danger" onclick="marcarResultado(false)">✘ Errou</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>👥 Alunos desta turma</h2>
+        <textarea id="txtNomes" placeholder="Cole os nomes, um por linha"></textarea>
+        <button class="btn-secondary" onclick="adicionarAlunos()">Adicionar alunos</button>
+      </div>
+
+      <div class="card">
+        <h2>📊 Desempenho</h2>
+        <ul id="listaDesempenho"><li class="empty">Nenhum aluno cadastrado ainda</li></ul>
+      </div>
+    </div>
+
+    <!-- ABA 2: PRESENÇA -->
+    <div class="tab" id="tabPresenca">
+      <div class="card">
+        <h2>📅 Registrar presença</h2>
+        <input type="date" id="dataPresenca" onchange="renderFormPresenca()">
+        <div id="checklistPresenca"></div>
+        <button class="btn-main" onclick="salvarPresenca()" style="margin-top:6px;">Salvar presença</button>
+        <div class="frase" id="confirmacaoPresenca"></div>
+      </div>
+      <div class="card">
+        <h2>📈 Resumo de frequência</h2>
+        <div class="resumo-top" id="resumoTopo"></div>
+        <ul id="listaResumoPresenca"><li class="empty">Sem registros ainda</li></ul>
+      </div>
+    </div>
+
+    <!-- ABA 3: DÚVIDAS -->
+    <div class="tab" id="tabDuvidas">
+      <div class="card">
+        <h2>🔗 Link para os alunos</h2>
+        <div class="link-box" id="linkAluno">carregando...</div>
+        <div id="qrcodeBox"><div id="qrcode"></div></div>
+        <div class="row">
+          <button class="btn-secondary" onclick="copiarLink()">Copiar link</button>
+          <a id="btnWhatsApp" class="btn-whats" target="_blank" rel="noopener">📲 WhatsApp</a>
+        </div>
+      </div>
+      <div class="card">
+        <h2>💬 Dúvidas recebidas</h2>
+        <div id="listaDuvidas"><div class="empty">Nenhuma dúvida ainda</div></div>
+      </div>
+    </div>
+
+    <!-- ABA 4: ROLETA -->
+    <div class="tab" id="tabRoleta">
+      <div class="card">
+        <h2>🎲 Roleta do Humor</h2>
+        <div class="filtro-resultado" id="resultadoRoleta">🎲</div>
+        <button class="btn-main" onclick="girarRoleta()">Girar</button>
+        <div class="frase" id="fraseRoleta"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<nav id="navBar">
+  <button class="active" onclick="trocarAba('tabGestao', this)">
+    <span class="emoji">🎯</span>Sorteio
+  </button>
+  <button onclick="trocarAba('tabPresenca', this)">
+    <span class="emoji">📅</span>Presença
+  </button>
+  <button onclick="trocarAba('tabDuvidas', this)">
+    <span class="emoji">💬</span>Dúvidas
+  </button>
+  <button onclick="trocarAba('tabRoleta', this)">
+    <span class="emoji">🎲</span>Roleta
+  </button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getDatabase, ref, push, onValue, update, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBplwJVmwVRRNbY-RZxQDnbxL3lRI6ZIQg",
+  authDomain: "brilh-fe5a2.firebaseapp.com",
+  databaseURL: "https://brilh-fe5a2-default-rtdb.firebaseio.com",
+  projectId: "brilh-fe5a2",
+  storageBucket: "brilh-fe5a2.firebasestorage.app",
+  messagingSenderId: "436475426123",
+  appId: "1:436475426123:web:697c673cd298cd4c99a4ce",
+  measurementId: "G-NNLQL24216"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const duvidasRef = ref(db, 'duvidas');
+
+// ---------- DETECÇÃO DE MODO (aluno vs professora) ----------
+const params = new URLSearchParams(window.location.search);
+const isAluno = params.get('aluno') === '1';
+
+if (isAluno) {
+  document.getElementById('viewProfessora').style.display = 'none';
+  document.getElementById('navBar').style.display = 'none';
+  document.getElementById('viewAluno').classList.add('active');
+  document.getElementById('subtitulo').textContent = 'Envie sua dúvida sem se identificar';
+} else {
+  document.getElementById('viewAluno').style.display = 'none';
+  const link = window.location.href.split('?')[0] + '?aluno=1';
+  document.getElementById('linkAluno').textContent = link;
+  document.getElementById('btnWhatsApp').href =
+    'https://wa.me/?text=' + encodeURIComponent('Envie sua dúvida aqui: ' + link);
+  if (window.QRCode) {
+    new QRCode(document.getElementById('qrcode'), { text: link, width: 160, height: 160 });
+  }
+}
+
+// ---------- NAVEGAÇÃO ENTRE ABAS ----------
+function trocarAba(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#navBar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (id === 'tabPresenca') renderFormPresenca();
+}
+
+// ---------- ESTADO (turmas, alunos, presença) ----------
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function loadState() {
+  let s = JSON.parse(localStorage.getItem('toolkitProfessor') || 'null');
+  if (s) return s;
+
+  // migração de versão antiga (uma turma só, sem presença)
+  const antiga = JSON.parse(localStorage.getItem('turma') || 'null');
+  s = { turmaAtual: 'Minha Turma', turmas: { 'Minha Turma': { alunos: [], presencas: {} } } };
+  if (antiga && Array.isArray(antiga)) {
+    s.turmas['Minha Turma'].alunos = antiga.map(a => ({
+      id: uid(), nome: a.nome, acertos: a.acertos || 0, erros: a.erros || 0
+    }));
+  }
+  saveState(s);
+  return s;
+}
+function saveState(s) { localStorage.setItem('toolkitProfessor', JSON.stringify(s)); }
+
+let state = loadState();
+function turmaAtualObj() { return state.turmas[state.turmaAtual]; }
+
+// ---------- GESTÃO DE TURMAS ----------
+function renderSelectTurma() {
+  const sel = document.getElementById('selectTurma');
+  sel.innerHTML = Object.keys(state.turmas)
+    .map(nome => `<option value="${nome}" ${nome === state.turmaAtual ? 'selected' : ''}>${nome}</option>`)
+    .join('');
+}
+
+function trocarTurma(nome) {
+  state.turmaAtual = nome;
+  saveState(state);
+  renderTudoTurma();
+}
+
+function novaTurma() {
+  const nome = prompt('Nome da nova turma (ex: 401B):');
+  if (!nome) return;
+  const limpo = nome.trim();
+  if (!limpo) return;
+  if (state.turmas[limpo]) { alert('Já existe uma turma com esse nome.'); return; }
+  state.turmas[limpo] = { alunos: [], presencas: {} };
+  state.turmaAtual = limpo;
+  saveState(state);
+  renderSelectTurma();
+  renderTudoTurma();
+}
+
+function excluirTurma() {
+  const nomes = Object.keys(state.turmas);
+  if (nomes.length <= 1) { alert('Você precisa ter ao menos uma turma.'); return; }
+  if (!confirm(`Excluir a turma "${state.turmaAtual}" e todos os seus alunos/presenças?`)) return;
+  delete state.turmas[state.turmaAtual];
+  state.turmaAtual = Object.keys(state.turmas)[0];
+  saveState(state);
+  renderSelectTurma();
+  renderTudoTurma();
+}
+
+function renderTudoTurma() {
+  renderDesempenho();
+  renderFormPresenca();
+  renderResumoPresenca();
+}
+
+// ---------- ALUNOS ----------
+function adicionarAlunos() {
+  const texto = document.getElementById('txtNomes').value.trim();
+  if (!texto) return;
+  const nomesNovos = texto.split('\n').map(n => n.trim()).filter(Boolean);
+  const turma = turmaAtualObj();
+  const existentes = new Set(turma.alunos.map(a => a.nome.toLowerCase()));
+  nomesNovos.forEach(nome => {
+    if (!existentes.has(nome.toLowerCase())) {
+      turma.alunos.push({ id: uid(), nome, acertos: 0, erros: 0 });
+    }
+  });
+  saveState(state);
+  document.getElementById('txtNomes').value = '';
+  renderDesempenho();
+  renderFormPresenca();
+}
+
+function excluirAluno(id) {
+  const turma = turmaAtualObj();
+  const aluno = turma.alunos.find(a => a.id === id);
+  if (!aluno) return;
+  if (!confirm(`Excluir "${aluno.nome}" desta turma?`)) return;
+  turma.alunos = turma.alunos.filter(a => a.id !== id);
+  saveState(state);
+  renderTudoTurma();
+}
+
+let alunoSorteadoId = null;
+
+function sortear() {
+  const turma = turmaAtualObj();
+  if (turma.alunos.length === 0) {
+    document.getElementById('nomeSorteado').textContent = 'Cadastre alunos primeiro';
+    return;
+  }
+  const idx = Math.floor(Math.random() * turma.alunos.length);
+  alunoSorteadoId = turma.alunos[idx].id;
+  document.getElementById('nomeSorteado').textContent = turma.alunos[idx].nome;
+  document.getElementById('botoesResultado').style.display = 'flex';
+}
+
+function marcarResultado(acertou) {
+  if (!alunoSorteadoId) return;
+  const turma = turmaAtualObj();
+  const aluno = turma.alunos.find(a => a.id === alunoSorteadoId);
+  if (aluno) { if (acertou) aluno.acertos++; else aluno.erros++; }
+  saveState(state);
+  document.getElementById('botoesResultado').style.display = 'none';
+  document.getElementById('nomeSorteado').textContent = 'Toque em sortear';
+  alunoSorteadoId = null;
+  renderDesempenho();
+}
+
+function renderDesempenho() {
+  const turma = turmaAtualObj();
+  const ul = document.getElementById('listaDesempenho');
+  if (turma.alunos.length === 0) {
+    ul.innerHTML = '<li class="empty">Nenhum aluno cadastrado ainda</li>';
+    return;
+  }
+  ul.innerHTML = turma.alunos.map(a => {
+    const total = a.acertos + a.erros;
+    const pct = total ? Math.round((a.acertos / total) * 100) : 0;
+    return `<li>
+      <span class="nome-aluno">${a.nome}</span>
+      <span class="pts">${a.acertos}✔ / ${a.erros}✘ (${pct}%)</span>
+      <button class="btn-danger btn-small" onclick="excluirAluno('${a.id}')">✕</button>
+    </li>`;
+  }).join('');
+}
+
+// ---------- PRESENÇA ----------
+function hojeISO() {
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+
+function renderFormPresenca() {
+  const inputData = document.getElementById('dataPresenca');
+  if (!inputData.value) inputData.value = hojeISO();
+  const data = inputData.value;
+  const turma = turmaAtualObj();
+  const registroDoDia = turma.presencas[data] || {};
+  const div = document.getElementById('checklistPresenca');
+
+  if (turma.alunos.length === 0) {
+    div.innerHTML = '<div class="empty">Cadastre alunos na aba Sorteio primeiro</div>';
+    return;
+  }
+
+  div.innerHTML = turma.alunos.map(a => {
+    const presente = registroDoDia.hasOwnProperty(a.id) ? registroDoDia[a.id] : true;
+    return `<div class="checklist-item">
+      <input type="checkbox" id="chk_${a.id}" ${presente ? 'checked' : ''}>
+      <label for="chk_${a.id}">${a.nome}</label>
+    </div>`;
+  }).join('');
+}
+
+function salvarPresenca() {
+  const data = document.getElementById('dataPresenca').value || hojeISO();
+  const turma = turmaAtualObj();
+  const registro = {};
+  turma.alunos.forEach(a => {
+    const chk = document.getElementById('chk_' + a.id);
+    registro[a.id] = chk ? chk.checked : true;
+  });
+  turma.presencas[data] = registro;
+  saveState(state);
+  const conf = document.getElementById('confirmacaoPresenca');
+  conf.textContent = '✔ Presença salva para ' + data;
+  setTimeout(() => conf.textContent = '', 2500);
+  renderResumoPresenca();
+}
+
+function renderResumoPresenca() {
+  const turma = turmaAtualObj();
+  const datas = Object.keys(turma.presencas);
+  const ul = document.getElementById('listaResumoPresenca');
+  const topo = document.getElementById('resumoTopo');
+
+  if (turma.alunos.length === 0) {
+    ul.innerHTML = '<li class="empty">Nenhum aluno cadastrado ainda</li>';
+    topo.innerHTML = '';
+    return;
+  }
+  if (datas.length === 0) {
+    ul.innerHTML = '<li class="empty">Sem registros de presença ainda</li>';
+    topo.innerHTML = '';
+    return;
+  }
+
+  const linhas = turma.alunos.map(a => {
+    let diasRegistrados = 0, presentes = 0;
+    datas.forEach(d => {
+      if (turma.presencas[d].hasOwnProperty(a.id)) {
+        diasRegistrados++;
+        if (turma.presencas[d][a.id]) presentes++;
+      }
+    });
+    const pct = diasRegistrados ? Math.round((presentes / diasRegistrados) * 100) : 0;
+    return { nome: a.nome, diasRegistrados, presentes, faltas: diasRegistrados - presentes, pct };
+  });
+
+  const cem = linhas.filter(l => l.diasRegistrados > 0 && l.pct === 100).map(l => l.nome);
+  const faltosos = linhas.filter(l => l.diasRegistrados > 0 && l.pct < 75).map(l => l.nome);
+
+  topo.innerHTML =
+    `<b>✅ 100% de presença:</b> ${cem.length ? cem.join(', ') : 'ninguém ainda'}<br>` +
+    `<b>⚠️ Faltosos (abaixo de 75%):</b> ${faltosos.length ? faltosos.join(', ') : 'ninguém'}`;
+
+  ul.innerHTML = linhas.map(l => {
+    let pill = '';
+    if (l.diasRegistrados === 0) pill = '<span class="badge">sem registro</span>';
+    else if (l.pct === 100) pill = `<span class="pill-100">${l.pct}%</span>`;
+    else if (l.pct < 75) pill = `<span class="pill-faltoso">${l.pct}% ⚠️</span>`;
+    else pill = `<span class="pts">${l.pct}%</span>`;
+    return `<li>
+      <span class="nome-aluno">${l.nome}</span>
+      <span style="font-size:12px; color:var(--muted);">${l.presentes}/${l.diasRegistrados} aulas</span>
+      ${pill}
+    </li>`;
+  }).join('');
+}
+
+// ---------- DÚVIDAS ANÔNIMAS (Firebase) ----------
+function enviarDuvida() {
+  const texto = document.getElementById('txtDuvidaAluno').value.trim();
+  if (!texto) return;
+  push(duvidasRef, { texto, criadoEm: serverTimestamp(), resolvida: false });
+  document.getElementById('txtDuvidaAluno').value = '';
+  document.getElementById('confirmacaoAluno').textContent = '✔ Dúvida enviada anonimamente!';
+  setTimeout(() => document.getElementById('confirmacaoAluno').textContent = '', 3000);
+}
+
+function copiarLink() {
+  navigator.clipboard.writeText(document.getElementById('linkAluno').textContent);
+}
+
+function resolverDuvida(id, valor) {
+  update(ref(db, 'duvidas/' + id), { resolvida: valor });
+}
+
+if (!isAluno) {
+  onValue(duvidasRef, (snapshot) => {
+    const div = document.getElementById('listaDuvidas');
+    const dados = snapshot.val();
+    if (!dados) {
+      div.innerHTML = '<div class="empty">Nenhuma dúvida ainda</div>';
+      return;
+    }
+    const itens = Object.entries(dados).sort((a, b) => (b[1].criadoEm || 0) - (a[1].criadoEm || 0));
+    div.innerHTML = '';
+    itens.forEach(([id, d]) => {
+      const hora = d.criadoEm ? new Date(d.criadoEm).toLocaleString('pt-BR') : '';
+      div.innerHTML += `
+        <div class="duvida">
+          <div>${d.texto}</div>
+          <div class="meta">
+            <span class="badge">${d.resolvida ? '✔ resolvida' : 'pendente'}</span> ${hora}
+            <button class="btn-secondary btn-small" style="margin-top:6px;"
+              onclick="resolverDuvida('${id}', ${!d.resolvida})">
+              ${d.resolvida ? 'Reabrir' : 'Marcar como respondida'}
+            </button>
+          </div>
+        </div>`;
+    });
+  });
+}
+
+// ---------- ROLETA DO HUMOR ----------
+const categorias = [
+  { nome: 'CDF', frase: 'O gabarito da turma! Vamos ver se a fama é real.' },
+  { nome: 'Bagunceiro', frase: 'Hora de provar que aprendeu mesmo brincando!' },
+  { nome: 'Turista', frase: 'O aluno que só vem passear... essa é pra você!' },
+  { nome: 'Comportado', frase: 'Quietinho mas atento, vamos testar!' },
+  { nome: 'Preguiçoso', frase: 'Bora acordar esses neurônios!' },
+  { nome: 'Anjo da Sala', frase: 'O favorito da turma, sem pressão... ou com!' },
+];
+
+function girarRoleta() {
+  const el = document.getElementById('resultadoRoleta');
+  const fraseEl = document.getElementById('fraseRoleta');
+  let voltas = 12, i = 0;
+  const interval = setInterval(() => {
+    el.textContent = categorias[i % categorias.length].nome;
+    i++; voltas--;
+    if (voltas <= 0) {
+      clearInterval(interval);
+      const final = categorias[Math.floor(Math.random() * categorias.length)];
+      el.textContent = final.nome;
+      fraseEl.textContent = final.frase;
+    }
+  }, 90);
+}
+
+// ---------- inicialização ----------
+if (!isAluno) {
+  renderSelectTurma();
+  renderTudoTurma();
+}
+
+// expõe funções pro HTML inline (onclick)
+window.enviarDuvida = enviarDuvida;
+window.copiarLink = copiarLink;
+window.resolverDuvida = resolverDuvida;
+window.sortear = sortear;
+window.marcarResultado = marcarResultado;
+window.adicionarAlunos = adicionarAlunos;
+window.excluirAluno = excluirAluno;
+window.trocarAba = trocarAba;
+window.trocarTurma = trocarTurma;
+window.novaTurma = novaTurma;
+window.excluirTurma = excluirTurma;
+window.renderFormPresenca = renderFormPresenca;
+window.salvarPresenca = salvarPresenca;
+window.girarRoleta = girarRoleta;
+</script>
+</body>
+</html>
